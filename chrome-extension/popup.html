@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    header {
+      background: #1e293b;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid #334155;
+    }
+    header h1 { font-size: 1rem; color: #818cf8; }
+    header p { font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem; }
+
+    .btn-area {
+      padding: 1rem 1.2rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    button {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #btnCopy { background: #4f46e5; color: white; }
+    #btnCopy:hover { background: #4338ca; }
+    #btnMd { background: #334155; color: #e2e8f0; }
+    #btnMd:hover { background: #475569; }
+
+    #toast {
+      display: none;
+      margin: 0 1.2rem;
+      background: #10b981;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    #tabList {
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 0.5rem 1.2rem 1rem;
+    }
+    .tab-item {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    .tab-item:last-child { border-bottom: none; }
+    .tab-title {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tab-url {
+      font-size: 0.72rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tab-count {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      padding: 0 1.2rem 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 タブまとめコピー</h1>
+    <p>全タブのURL・タイトルをコピーします</p>
+  </header>
+
+  <div class="btn-area">
+    <button id="btnCopy">📝 テキストでコピー</button>
+    <button id="btnMd">🔗 Markdown形式</button>
+  </div>
+
+  <div id="toast">✅ コピーしました！</div>
+  <div id="tabCount" class="tab-count"></div>
+  <div id="tabList"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

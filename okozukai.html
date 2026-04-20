@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>おてつだいアプリ 🌟</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:      #f59e0b;
+      --primary-dark: #d97706;
+      --green:        #10b981;
+      --red:          #ef4444;
+      --blue:         #3b82f6;
+      --purple:       #8b5cf6;
+      --indigo:       #6366f1;
+      --bg:           #fef9f0;
+      --text:         #1e293b;
+      --text-muted:   #64748b;
+      --border:       #e2e8f0;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== ヘッダー ===== */
+    header {
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    header.parent-mode { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+
+    .header-title { font-size: 1.3rem; font-weight: 800; }
+
+    .mode-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.5);
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mode-btn:hover { background: rgba(255,255,255,0.35); }
+
+    /* ===== メイン ===== */
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1.2rem 1rem 3rem;
+    }
+
+    .section { margin-bottom: 1.8rem; }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ===== カレンダー ===== */
+    .cal-wrap {
+      background: white;
+      border-radius: 16px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 1rem;
+    }
+
+    .cal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.8rem;
+    }
+
+    .cal-center { text-align: center; }
+    .cal-month-label { font-size: 1rem; font-weight: 700; }
+    .cal-total-label { font-size: 0.75rem; color: var(--text-muted); }
+    .cal-total-value { font-size: 1rem; font-weight: 800; color: var(--green); }
+
+    .cal-nav-btn {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .cal-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      margin-bottom: 0.3rem;
+    }
+
+    .cal-day-name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 0.25rem 0;
+    }
+
+    .cal-day-name.sun { color: #ef4444; }
+    .cal-day-name.sat { color: #3b82f6; }
+
+    .cal-body {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .cal-cell:hover:not(.empty):not(.future) { background: #f1f5f9; }
+    .cal-cell.empty  { cursor: default; }
+    .cal-cell.future { cursor: default; }
+    .cal-cell.selected { background: #fef3c7; }
+
+    .cal-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .cal-cell.sun .cal-num { color: #ef4444; }
+    .cal-cell.sat .cal-num { color: #3b82f6; }
+    .cal-cell.future .cal-num { color: #cbd5e1; }
+
+    .cal-cell.today .cal-num {
+      background: rgba(99,102,241,0.15);
+      color: #6366f1;
+      font-weight: 800;
+    }
+
+    .cal-cell.selected .cal-num {
+      background: var(--primary);
+      color: white !important;
+      font-weight: 700;
+    }
+
+    /* カレンダーマス内の小さいインジケーター */
+    .cal-indicator {
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: var(--green);
+      margin-top: 2px;
+      line-height: 1;
+    }
+
+    .cal-pending-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #f59e0b;
+      margin-top: 2px;
+    }
+
+    /* ===== 日付詳細ポップアップ ===== */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 500;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .popup {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 1.5rem 1.5rem 2rem;
+      width: 100%;
+      max-width: 600px;
+      animation: slideUp 0.22s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .popup-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .popup-close {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* ポップアップ内の記録テーブル */
+    .popup-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .popup-table th {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 0.4rem 0.5rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .popup-table th:last-child { text-align: right; }
+
+    .popup-table td {
+      padding: 0.6rem 0.5rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+
+    .popup-table td:last-child {
+      text-align: right;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .popup-table .chore-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .popup-table .count-cell {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .popup-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 0.5rem;
+      border-top: 2px solid var(--border);
+      margin-top: 0.2rem;
+    }
+
+    .popup-total-label {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .popup-total-amount {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    /* ポップアップ内のお手伝いボタン（子供モード） */
+    .popup-chore-section {
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .popup-chore-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .popup-chore-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    /* ポップアップ内の承認ボタン（親モード） */
+    .popup-approve-row {
+      display: flex;
+      align-items: center;
+      padding: 0.55rem 0.5rem;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 0.5rem;
+    }
+
+    .popup-approve-name { flex: 1; font-size: 0.88rem; font-weight: 600; }
+    .popup-approve-amt  { font-weight: 700; color: var(--green); font-size: 0.88rem; margin-right: 0.3rem; }
+
+    /* ===== 選択した日のパネル ===== */
+    .day-panel {
+      background: white;
+      border-radius: 16px;
+      padding: 1.2rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 1.5rem;
+    }
+
+    .day-panel-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    /* お手伝いグリッド（日付パネル内） */
+    .chores-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .chore-card {
+      background: #fef9f0;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 0.8rem;
+      text-align: center;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .chore-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .chore-emoji  { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .chore-name   { font-weight: 700; font-size: 0.82rem; margin-bottom: 0.2rem; }
+    .chore-amount { font-size: 0.88rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 0.5rem; }
+
+    .apply-btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .apply-btn:hover { background: var(--primary-dark); }
+
+    /* 記録リスト */
+    .record-list { display: flex; flex-direction: column; gap: 0.45rem; }
+
+    .record-item {
+      display: flex;
+      align-items: center;
+      padding: 0.55rem 0.8rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      gap: 0.5rem;
+    }
+
+    .record-name   { flex: 1; font-weight: 600; font-size: 0.88rem; }
+    .record-amount { font-weight: 700; color: var(--green); font-size: 0.88rem; }
+
+    .status-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .status-pending  { background: rgba(245,158,11,0.15); color: #d97706; }
+    .status-approved { background: rgba(16,185,129,0.15); color: #059669; }
+    .status-rejected { background: rgba(239,68,68,0.15);  color: #dc2626; }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0.9rem 0; }
+
+    /* ===== 承認アイテム（親） ===== */
+    .approval-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      margin-bottom: 0.55rem;
+    }
+
+    .approval-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .approval-btns { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    .btn-approve {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-reject {
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ===== お手伝い管理 ===== */
+    .manage-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .manage-info { flex: 1; }
+    .manage-name   { font-weight: 700; font-size: 0.9rem; }
+    .manage-amount { color: var(--primary-dark); font-weight: 700; font-size: 0.83rem; }
+    .manage-btns   { display: flex; gap: 0.4rem; }
+
+    .btn-edit {
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-delete {
+      background: #f1f5f9;
+      color: var(--red);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ===== 追加フォーム ===== */
+    .add-form {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 0.6rem;
+    }
+
+    .form-row { display: flex; gap: 0.7rem; margin-bottom: 0.7rem; }
+    .form-group { flex: 1; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.28rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.48rem 0.7rem;
+      font-size: 0.88rem;
+      outline: none;
+    }
+
+    .form-group input:focus { border-color: var(--blue); }
+
+    .btn-add {
+      width: 100%;
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ===== PIN ===== */
+    .pin-section {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .pin-row { display: flex; gap: 0.7rem; align-items: flex-end; }
+
+    .btn-pin-change {
+      background: var(--indigo);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ===== 空状態 ===== */
+    .empty-state {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* ===== PINモーダル ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 300px;
+      text-align: center;
+    }
+
+    .modal h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .modal p  { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+    .pin-input {
+      width: 100%;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.5rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 0.6rem;
+      margin-bottom: 0.4rem;
+      outline: none;
+    }
+
+    .pin-input:focus { border-color: var(--purple); }
+    .pin-error { color: #ef4444; font-size: 0.78rem; min-height: 1.1rem; margin-bottom: 0.7rem; }
+
+    .modal-btns { display: flex; gap: 0.7rem; }
+
+    .btn-cancel {
+      flex: 1;
+      background: #f1f5f9;
+      color: var(--text);
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      flex: 1;
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ===== トースト ===== */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: white;
+      padding: 0.7rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 2000;
+      white-space: nowrap;
+      animation: fadeInOut 2.5s ease forwards;
+    }
+
+    @keyframes fadeInOut {
+      0%   { opacity:0; transform:translateX(-50%) translateY(8px); }
+      15%  { opacity:1; transform:translateX(-50%) translateY(0); }
+      75%  { opacity:1; }
+      100% { opacity:0; }
+    }
+
+    .hidden { display: none !important; }
+
+    /* ===== お手伝いサマリー ===== */
+    .summary-wrap {
+      background: white;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-header {
+      padding: 0.8rem 1.2rem;
+      font-weight: 700;
+      font-size: 0.92rem;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      padding: 0.65rem 1.2rem;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 0.6rem;
+    }
+
+    .summary-row:last-child { border-bottom: none; }
+
+    .summary-emoji { font-size: 1.2rem; flex-shrink: 0; }
+
+    .summary-name  { flex: 1; font-weight: 600; font-size: 0.88rem; }
+
+    .summary-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .summary-amount {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--green);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .summary-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.2rem;
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03));
+      border-top: 2px solid rgba(16,185,129,0.2);
+    }
+
+    .summary-total-label {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .summary-total-amount {
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--green);
+    }
+
+    /* バッジ */
+    .badge {
+      background: #fef3c7;
+      color: #d97706;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.1rem 0.55rem;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header id="header">
+    <div class="header-title" id="header-title">🌟 おてつだいアプリ</div>
+    <button class="mode-btn" id="mode-btn" onclick="handleModeToggle()">親モード</button>
+  </header>
+
+  <!-- PINモーダル -->
+  <div class="modal-overlay hidden" id="pin-modal">
+    <div class="modal">
+      <h3>🔐 親モード</h3>
+      <p>PINを入力してください<br><small>（初期PIN: 0000）</small></p>
+      <input class="pin-input" type="password" inputmode="numeric" maxlength="4" id="pin-input" placeholder="●●●●" />
+      <div class="pin-error" id="pin-error"></div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closePinModal()">キャンセル</button>
+        <button class="btn-confirm" onclick="confirmPin()">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日付詳細ポップアップ -->
+  <div class="popup-overlay hidden" id="day-popup" onclick="handlePopupOverlayClick(event)">
+    <div class="popup" id="popup-content">
+      <div class="popup-header">
+        <div class="popup-title" id="popup-title"></div>
+        <button class="popup-close" onclick="closePopup()">✕</button>
+      </div>
+      <div id="popup-body"></div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ===== 子供モード ===== -->
+    <div id="child-view">
+
+      <!-- カレンダー -->
+      <div class="cal-wrap">
+        <div class="cal-top">
+          <button class="cal-nav-btn" onclick="changeCalMonth(-1)">◀</button>
+          <div class="cal-center">
+            <div class="cal-month-label" id="cal-month-label"></div>
+            <div class="cal-total-label">もらえるきんがく：<span class="cal-total-value" id="child-total">¥0</span></div>
+          </div>
+          <button class="cal-nav-btn" onclick="changeCalMonth(1)">▶</button>
+        </div>
+        <div class="cal-header">
+          <div class="cal-day-name sun">日</div>
+          <div class="cal-day-name">月</div>
+          <div class="cal-day-name">火</div>
+          <div class="cal-day-name">水</div>
+          <div class="cal-day-name">木</div>
+          <div class="cal-day-name">金</div>
+          <div class="cal-day-name sat">土</div>
+        </div>
+        <div class="cal-body" id="child-cal-body"></div>
+      </div>
+
+      <!-- 選択した日のパネル -->
+      <div class="day-panel">
+        <div class="day-panel-title" id="child-day-title">📅 ひにちをタップしてね</div>
+        <div id="child-chore-area"></div>
+        <div id="child-record-area"></div>
+      </div>
+
+      <!-- お手伝いサマリー -->
+      <div id="child-summary"></div>
+
+    </div>
+
+    <!-- ===== 親モード ===== -->
+    <div id="parent-view" class="hidden">
+
+      <!-- カレンダー（親） -->
+      <div class="cal-wrap">
+        <div class="cal-top">
+          <button class="cal-nav-btn" onclick="changeCalMonth(-1)">◀</button>
+          <div class="cal-center">
+            <div class="cal-month-label" id="parent-cal-month-label"></div>
+            <div class="cal-total-label">承認済み合計：<span class="cal-total-value" id="parent-total">¥0</span></div>
+          </div>
+          <button class="cal-nav-btn" onclick="changeCalMonth(1)">▶</button>
+        </div>
+        <div class="cal-header">
+          <div class="cal-day-name sun">日</div>
+          <div class="cal-day-name">月</div>
+          <div class="cal-day-name">火</div>
+          <div class="cal-day-name">水</div>
+          <div class="cal-day-name">木</div>
+          <div class="cal-day-name">金</div>
+          <div class="cal-day-name sat">土</div>
+        </div>
+        <div class="cal-body" id="parent-cal-body"></div>
+      </div>
+
+      <!-- 選択した日のパネル（親） -->
+      <div class="day-panel">
+        <div class="day-panel-title" id="parent-day-title">📅 日付をタップしてください</div>
+        <div id="parent-day-records"></div>
+      </div>
+
+      <!-- お手伝いサマリー（親） -->
+      <div id="parent-summary"></div>
+
+      <!-- 承認待ち一覧 -->
+      <div class="section">
+        <div class="section-title">
+          ⏳ 承認待ち一覧
+          <span class="badge" id="pending-badge" style="display:none"></span>
+        </div>
+        <div id="pending-list"></div>
+      </div>
+
+      <!-- お手伝い管理 -->
+      <div class="section">
+        <div class="section-title">⚙️ お手伝い管理</div>
+        <div id="manage-list"></div>
+        <div class="add-form">
+          <div style="font-weight:700;margin-bottom:0.7rem;font-size:0.88rem;">➕ お手伝いを追加</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>名前</label>
+              <input type="text" id="new-name" placeholder="例：皿洗い" />
+            </div>
+            <div class="form-group" style="max-width:105px;">
+              <label>金額（円）</label>
+              <input type="number" id="new-amount" placeholder="50" min="1" />
+            </div>
+          </div>
+          <button class="btn-add" onclick="addChore()">追加する</button>
+        </div>
+      </div>
+
+      <!-- PIN設定 -->
+      <div class="section">
+        <div class="section-title">🔐 PIN設定</div>
+        <div class="pin-section">
+          <div class="pin-row">
+            <div class="form-group">
+              <label>新しいPIN（4桁の数字）</label>
+              <input type="password" inputmode="numeric" maxlength="4" id="new-pin" placeholder="0000" />
+            </div>
+            <button class="btn-pin-change" onclick="changePin()">変更する</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // ===== 定数 =====
+    const STORAGE_KEY = 'okozukai_app_v1';
+    const EMOJIS = ['🧹','🍽️','🗑️','🛒','🌿','🐕','📚','🧺','🪟','🍳','💧','🧴','🪴','🎒','🐠'];
+    const DOW_JA  = ['日','月','火','水','木','金','土'];
+
+    // ===== ユーティリティ =====
+    function genId()       { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+    function randomEmoji() { return EMOJIS[Math.floor(Math.random() * EMOJIS.length)]; }
+
+    function todayStr() {
+      const n = new Date();
+      return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`;
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function toYM(y, m) { return `${y}-${pad(m)}`; }
+
+    function formatMonthJa(y, m) { return `${y}年${m}月`; }
+
+    function formatDateJa(ds) {
+      const [y, m, d] = ds.split('-').map(Number);
+      const dow = new Date(y, m-1, d).getDay();
+      return `${m}月${d}日（${DOW_JA[dow]}）`;
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ===== データ =====
+    function getData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+      const d = {
+        pin: '0000',
+        chores: [
+          { id: genId(), name: '皿洗い',    amount: 50,  emoji: '🍽️' },
+          { id: genId(), name: '掃除機かけ', amount: 100, emoji: '🧹' },
+          { id: genId(), name: 'ゴミ出し',  amount: 50,  emoji: '🗑️' },
+        ],
+        requests: []
+      };
+      saveData(d);
+      return d;
+    }
+
+    function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+    // ===== 状態 =====
+    let isParent     = false;
+    let calYear      = new Date().getFullYear();
+    let calMonth     = new Date().getMonth() + 1;
+    let selectedDate = todayStr();
+
+    // ===== カレンダー生成 =====
+    function buildCalendarHTML(year, month, requests, mode, chores) {
+      const firstDow    = new Date(year, month-1, 1).getDay();
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const today       = todayStr();
+      const ym          = toYM(year, month);
+      const monthReqs   = requests.filter(r => r.month === ym);
+
+      let html = '';
+
+      for (let i = 0; i < firstDow; i++) {
+        html += '<div class="cal-cell empty"></div>';
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const ds      = `${year}-${pad(month)}-${pad(day)}`;
+        const dow     = new Date(year, month-1, day).getDay();
+        const isToday = ds === today;
+        const isSel   = ds === selectedDate;
+        const isFuture = ds > today;
+
+        const dayReqs     = monthReqs.filter(r => r.date === ds);
+        const approvedTotal = dayReqs.filter(r => r.status === 'approved').reduce((s, r) => s + r.amount, 0);
+        const hasPending    = dayReqs.some(r => r.status === 'pending');
+
+        let cls = 'cal-cell';
+        if (dow === 0) cls += ' sun';
+        if (dow === 6) cls += ' sat';
+        if (isToday)   cls += ' today';
+        if (isSel)     cls += ' selected';
+        if (isFuture)  cls += ' future';
+
+        // マス内：日付＋小さいインジケーター
+        const indicator = approvedTotal > 0
+          ? `<div class="cal-indicator">¥${approvedTotal.toLocaleString()}</div>`
+          : hasPending
+            ? '<div class="cal-pending-dot"></div>'
+            : '';
+
+        const onclick = isFuture ? '' : `onclick="selectDate('${ds}')"`;
+        html += `<div class="${cls}" ${onclick}><div class="cal-num">${day}</div>${indicator}</div>`;
+      }
+
+      return html;
+    }
+
+    // ===== 描画 =====
+    function render() {
+      const data = getData();
+
+      if (isParent) {
+        renderParentCalendar(data);
+        renderParentDayPanel(data);
+        renderSummary('parent-summary', data);
+        renderPendingList(data);
+        renderManageList(data);
+      } else {
+        renderChildCalendar(data);
+        renderChildDayPanel(data);
+        renderSummary('child-summary', data);
+      }
+    }
+
+    // --- 子供：カレンダー ---
+    function renderChildCalendar(data) {
+      const ym    = toYM(calYear, calMonth);
+      const total = data.requests
+        .filter(r => r.month === ym && r.status === 'approved')
+        .reduce((s, r) => s + r.amount, 0);
+
+      document.getElementById('cal-month-label').textContent = formatMonthJa(calYear, calMonth);
+      document.getElementById('child-total').textContent     = `¥${total.toLocaleString()}`;
+      document.getElementById('child-cal-body').innerHTML    = buildCalendarHTML(calYear, calMonth, data.requests, 'child', data.chores);
+    }
+
+    // --- 子供：日付パネル ---
+    function renderChildDayPanel(data) {
+      const title = document.getElementById('child-day-title');
+      const choreArea  = document.getElementById('child-chore-area');
+      const recordArea = document.getElementById('child-record-area');
+
+      if (!selectedDate) {
+        title.textContent = '📅 ひにちをタップしてね';
+        choreArea.innerHTML  = '';
+        recordArea.innerHTML = '';
+        return;
+      }
+
+      const isFuture = selectedDate > todayStr();
+      title.textContent = `📅 ${formatDateJa(selectedDate)}`;
+
+      // お手伝いボタン（今日以前のみ）
+      if (isFuture) {
+        choreArea.innerHTML = '';
+      } else {
+        if (data.chores.length === 0) {
+          choreArea.innerHTML = '<div class="empty-state" style="padding:0.8rem 0">おてつだいがまだないよ</div>';
+        } else {
+          choreArea.innerHTML = `
+            <div class="chores-grid">
+              ${data.chores.map(c => `
+                <div class="chore-card">
+                  <div class="chore-emoji">${c.emoji || '⭐'}</div>
+                  <div class="chore-name">${esc(c.name)}</div>
+                  <div class="chore-amount">¥${c.amount}</div>
+                  <button class="apply-btn" onclick="applyChore('${c.id}')">やったよ！</button>
+                </div>`).join('')}
+            </div>`;
+        }
+      }
+
+      // その日の記録
+      const dayReqs = data.requests
+        .filter(r => r.date === selectedDate)
+        .sort((a, b) => b.id.localeCompare(a.id));
+
+      if (dayReqs.length > 0) {
+        recordArea.innerHTML = `
+          <hr class="divider">
+          <div class="record-list">
+            ${dayReqs.map(r => `
+              <div class="record-item">
+                <span class="record-name">${esc(r.choreName)}</span>
+                <span class="record-amount">¥${r.amount}</span>
+                <span class="status-badge ${statusClass(r.status)}">${statusLabel(r.status)}</span>
+              </div>`).join('')}
+          </div>`;
+      } else {
+        recordArea.innerHTML = isFuture
+          ? ''
+          : '<hr class="divider"><div class="empty-state" style="padding:0.8rem 0">このひのきろくはまだないよ</div>';
+      }
+    }
+
+    // --- 親：カレンダー ---
+    function renderParentCalendar(data) {
+      const ym    = toYM(calYear, calMonth);
+      const total = data.requests
+        .filter(r => r.month === ym && r.status === 'approved')
+        .reduce((s, r) => s + r.amount, 0);
+
+      document.getElementById('parent-cal-month-label').textContent = formatMonthJa(calYear, calMonth);
+      document.getElementById('parent-total').textContent           = `¥${total.toLocaleString()}`;
+      document.getElementById('parent-cal-body').innerHTML          = buildCalendarHTML(calYear, calMonth, data.requests, 'parent', data.chores);
+    }
+
+    // --- 親：日付パネル ---
+    function renderParentDayPanel(data) {
+      const title      = document.getElementById('parent-day-title');
+      const recordArea = document.getElementById('parent-day-records');
+
+      if (!selectedDate) {
+        title.textContent    = '📅 日付をタップしてください';
+        recordArea.innerHTML = '';
+        return;
+      }
+
+      title.textContent = `📅 ${formatDateJa(selectedDate)}`;
+
+      const dayReqs = data.requests
+        .filter(r => r.date === selectedDate)
+        .sort((a, b) => b.id.localeCompare(a.id));
+
+      if (dayReqs.length === 0) {
+        recordArea.innerHTML = '<div class="empty-state" style="padding:0.5rem 0">この日の記録はありません</div>';
+        return;
+      }
+
+      recordArea.innerHTML = `
+        <div class="record-list">
+          ${dayReqs.map(r => `
+            <div class="record-item">
+              <span class="record-name">${esc(r.choreName)}</span>
+              <span class="record-amount">¥${r.amount}</span>
+              ${r.status === 'pending'
+                ? `<button class="btn-approve" onclick="approveReq('${r.id}')">承認</button>
+                   <button class="btn-reject"  onclick="rejectReq('${r.id}')">却下</button>`
+                : `<span class="status-badge ${statusClass(r.status)}">${statusLabel(r.status)}</span>`
+              }
+            </div>`).join('')}
+        </div>`;
+    }
+
+    // --- 親：承認待ち一覧 ---
+    function renderPendingList(data) {
+      const pending = data.requests
+        .filter(r => r.status === 'pending')
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const badge = document.getElementById('pending-badge');
+      if (pending.length > 0) {
+        badge.style.display  = '';
+        badge.textContent    = `${pending.length}件`;
+      } else {
+        badge.style.display = 'none';
+      }
+
+      document.getElementById('pending-list').innerHTML = pending.length
+        ? pending.map(r => `
+            <div class="approval-item">
+              <div class="approval-row">
+                <div>
+                  <div style="font-weight:700;font-size:0.9rem;">${esc(r.choreName)}</div>
+                  <div style="font-size:0.78rem;color:var(--text-muted);">${formatDateJa(r.date)} ・ ¥${r.amount}</div>
+                </div>
+                <div class="approval-btns">
+                  <button class="btn-approve" onclick="approveReq('${r.id}')">承認 ✅</button>
+                  <button class="btn-reject"  onclick="rejectReq('${r.id}')">却下 ❌</button>
+                </div>
+              </div>
+            </div>`).join('')
+        : '<div class="empty-state">承認待ちはありません ✅</div>';
+    }
+
+    // --- 親：お手伝い管理 ---
+    function renderManageList(data) {
+      document.getElementById('manage-list').innerHTML = data.chores.length
+        ? data.chores.map(c => `
+            <div class="manage-item">
+              <div class="manage-info">
+                <div class="manage-name">${c.emoji || '⭐'} ${esc(c.name)}</div>
+                <div class="manage-amount">¥${c.amount}</div>
+              </div>
+              <div class="manage-btns">
+                <button class="btn-edit"   onclick="editChore('${c.id}')">編集</button>
+                <button class="btn-delete" onclick="deleteChore('${c.id}')">削除</button>
+              </div>
+            </div>`).join('')
+        : '<div class="empty-state" style="padding:1rem 0">お手伝いが登録されていません</div>';
+    }
+
+    // ===== サマリー描画 =====
+    function renderSummary(targetId, data) {
+      const ym      = toYM(calYear, calMonth);
+      const approved = data.requests.filter(r => r.month === ym && r.status === 'approved');
+
+      if (approved.length === 0) {
+        document.getElementById(targetId).innerHTML = '';
+        return;
+      }
+
+      // お手伝いごとに集計
+      const map = {};
+      approved.forEach(r => {
+        if (!map[r.choreName]) {
+          const chore = data.chores.find(c => c.id === r.choreId);
+          map[r.choreName] = { emoji: chore?.emoji || '⭐', count: 0, total: 0 };
+        }
+        map[r.choreName].count++;
+        map[r.choreName].total += r.amount;
+      });
+
+      const totalAmount = approved.reduce((s, r) => s + r.amount, 0);
+      const totalCount  = approved.length;
+
+      const rows = Object.entries(map)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([name, v]) => `
+          <div class="summary-row">
+            <span class="summary-emoji">${v.emoji}</span>
+            <span class="summary-name">${esc(name)}</span>
+            <span class="summary-count">${v.count}回</span>
+            <span class="summary-amount">¥${v.total.toLocaleString()}</span>
+          </div>`).join('');
+
+      document.getElementById(targetId).innerHTML = `
+        <div class="summary-wrap">
+          <div class="summary-header">📊 ${formatMonthJa(calYear, calMonth)}のまとめ</div>
+          ${rows}
+          <div class="summary-total-row">
+            <span class="summary-total-label">ぜんぶで ${totalCount}かい</span>
+            <span class="summary-total-amount">¥${totalAmount.toLocaleString()}</span>
+          </div>
+        </div>`;
+    }
+
+    // ===== 日付選択 → ポップアップ表示 =====
+    function selectDate(ds) {
+      selectedDate = ds;
+      render();
+      openDayPopup(ds);
+    }
+
+    function openDayPopup(ds) {
+      const data = getData();
+      document.getElementById('popup-title').textContent = `📅 ${formatDateJa(ds)}`;
+      document.getElementById('popup-body').innerHTML    = buildPopupBody(ds, data);
+      document.getElementById('day-popup').classList.remove('hidden');
+    }
+
+    function closePopup() {
+      document.getElementById('day-popup').classList.add('hidden');
+    }
+
+    function handlePopupOverlayClick(e) {
+      if (e.target === document.getElementById('day-popup')) closePopup();
+    }
+
+    function buildPopupBody(ds, data) {
+      const dayReqs = data.requests.filter(r => r.date === ds);
+      const isFuture = ds > todayStr();
+
+      // 承認済みをグループ化
+      const approvedMap = {};
+      dayReqs.filter(r => r.status === 'approved').forEach(r => {
+        const chore = data.chores.find(c => c.id === r.choreId);
+        if (!approvedMap[r.choreName]) {
+          approvedMap[r.choreName] = { count: 0, total: 0, emoji: chore?.emoji || '⭐' };
+        }
+        approvedMap[r.choreName].count++;
+        approvedMap[r.choreName].total += r.amount;
+      });
+
+      // 申請中
+      const pendingReqs = dayReqs.filter(r => r.status === 'pending');
+
+      const approvedTotal = dayReqs.filter(r => r.status === 'approved').reduce((s, r) => s + r.amount, 0);
+      const approvedCount = dayReqs.filter(r => r.status === 'approved').length;
+
+      let html = '';
+
+      // 承認済みテーブル
+      if (Object.keys(approvedMap).length > 0) {
+        html += `
+          <table class="popup-table">
+            <thead>
+              <tr>
+                <th>おてつだい</th>
+                <th style="text-align:center">かいすう</th>
+                <th>きんがく</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(approvedMap).map(([name, v]) => `
+                <tr>
+                  <td><div class="chore-cell">${v.emoji} ${esc(name)}</div></td>
+                  <td class="count-cell" style="text-align:center">${v.count}かい</td>
+                  <td>¥${v.total.toLocaleString()}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+          <div class="popup-total-row">
+            <span class="popup-total-label">ぜんぶで ${approvedCount}かい</span>
+            <span class="popup-total-amount">¥${approvedTotal.toLocaleString()}</span>
+          </div>`;
+      } else if (!isFuture) {
+        html += '<div class="empty-state" style="padding:1rem 0">このひのきろくはないよ</div>';
+      }
+
+      // 申請中（親モード：承認ボタン付き）
+      if (isParent && pendingReqs.length > 0) {
+        html += `<div style="margin-top:1rem;font-size:0.82rem;font-weight:700;color:var(--text-muted);margin-bottom:0.5rem;">⏳ 承認待ち</div>`;
+        html += pendingReqs.map(r => `
+          <div class="popup-approve-row">
+            <span class="popup-approve-name">${r.emoji || ''}${esc(r.choreName)}</span>
+            <span class="popup-approve-amt">¥${r.amount}</span>
+            <button class="btn-approve" onclick="approveReqFromPopup('${r.id}','${ds}')">承認</button>
+            <button class="btn-reject"  onclick="rejectReqFromPopup('${r.id}','${ds}')">却下</button>
+          </div>`).join('');
+      } else if (!isParent && pendingReqs.length > 0) {
+        html += `<div style="margin-top:0.8rem;padding:0.6rem 0.8rem;background:rgba(245,158,11,0.1);border-radius:8px;font-size:0.82rem;font-weight:600;color:#b45309;">
+          ⏳ ${pendingReqs.length}かいぶん、おかあさん（おとうさん）にみてもらっています
+        </div>`;
+      }
+
+      // 子供モード：お手伝い申請ボタン
+      if (!isParent && !isFuture && data.chores.length > 0) {
+        html += `
+          <div class="popup-chore-section">
+            <div class="popup-chore-label">このひにおてつだいをついかする</div>
+            <div class="popup-chore-grid">
+              ${data.chores.map(c => `
+                <div class="chore-card">
+                  <div class="chore-emoji">${c.emoji || '⭐'}</div>
+                  <div class="chore-name">${esc(c.name)}</div>
+                  <div class="chore-amount">¥${c.amount}</div>
+                  <button class="apply-btn" onclick="applyChoreFromPopup('${c.id}','${ds}')">やったよ！</button>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      }
+
+      return html;
+    }
+
+    // ===== カレンダー月移動 =====
+    function changeCalMonth(delta) {
+      let m = calMonth + delta;
+      let y = calYear;
+      if (m < 1)  { m = 12; y--; }
+      if (m > 12) { m = 1;  y++; }
+      calMonth = m;
+      calYear  = y;
+      render();
+    }
+
+    // ===== ポップアップ内から申請（子供） =====
+    function applyChoreFromPopup(choreId, ds) {
+      const data  = getData();
+      const chore = data.chores.find(c => c.id === choreId);
+      if (!chore) return;
+      data.requests.push({
+        id: genId(), choreId: chore.id, choreName: chore.name,
+        amount: chore.amount, status: 'pending',
+        date: ds, month: ds.slice(0, 7)
+      });
+      saveData(data);
+      render();
+      document.getElementById('popup-body').innerHTML = buildPopupBody(ds, getData());
+      toast(`「${chore.name}」をやったよ！とつたえました！`);
+    }
+
+    // ===== ポップアップ内から承認・却下（親） =====
+    function approveReqFromPopup(id, ds) {
+      const data = getData();
+      const r = data.requests.find(r => r.id === id);
+      if (r) { r.status = 'approved'; saveData(data); render();
+        document.getElementById('popup-body').innerHTML = buildPopupBody(ds, getData());
+        toast('承認しました ✅'); }
+    }
+
+    function rejectReqFromPopup(id, ds) {
+      const data = getData();
+      const r = data.requests.find(r => r.id === id);
+      if (r) { r.status = 'rejected'; saveData(data); render();
+        document.getElementById('popup-body').innerHTML = buildPopupBody(ds, getData());
+        toast('却下しました'); }
+    }
+
+    // ===== 子供：申請 =====
+    function applyChore(choreId) {
+      if (!selectedDate || selectedDate > todayStr()) return;
+      const data  = getData();
+      const chore = data.chores.find(c => c.id === choreId);
+      if (!chore) return;
+
+      data.requests.push({
+        id:        genId(),
+        choreId:   chore.id,
+        choreName: chore.name,
+        amount:    chore.amount,
+        status:    'pending',
+        date:      selectedDate,
+        month:     selectedDate.slice(0, 7)
+      });
+      saveData(data);
+      render();
+      toast(`「${chore.name}」をやったよ！とつたえました！`);
+    }
+
+    // ===== 親：承認・却下 =====
+    function approveReq(id) {
+      const data = getData();
+      const r    = data.requests.find(r => r.id === id);
+      if (r) { r.status = 'approved'; saveData(data); render(); toast('承認しました ✅'); }
+    }
+
+    function rejectReq(id) {
+      const data = getData();
+      const r    = data.requests.find(r => r.id === id);
+      if (r) { r.status = 'rejected'; saveData(data); render(); toast('却下しました'); }
+    }
+
+    // ===== 親：お手伝い管理 =====
+    function addChore() {
+      const name   = document.getElementById('new-name').value.trim();
+      const amount = parseInt(document.getElementById('new-amount').value);
+      if (!name || !amount || amount < 1) { toast('名前と金額を入力してください'); return; }
+      const data = getData();
+      data.chores.push({ id: genId(), name, amount, emoji: randomEmoji() });
+      saveData(data);
+      document.getElementById('new-name').value   = '';
+      document.getElementById('new-amount').value = '';
+      render();
+      toast(`「${name}」を追加しました！`);
+    }
+
+    function editChore(choreId) {
+      const data  = getData();
+      const chore = data.chores.find(c => c.id === choreId);
+      if (!chore) return;
+      const newName = prompt('お手伝いの名前:', chore.name);
+      if (newName === null) return;
+      const newAmt  = parseInt(prompt('金額（円）:', chore.amount));
+      if (isNaN(newAmt) || newAmt < 1) { toast('正しい金額を入力してください'); return; }
+      chore.name   = newName.trim() || chore.name;
+      chore.amount = newAmt;
+      saveData(data);
+      render();
+      toast('更新しました');
+    }
+
+    function deleteChore(choreId) {
+      if (!confirm('このお手伝いを削除しますか？')) return;
+      const data = getData();
+      data.chores = data.chores.filter(c => c.id !== choreId);
+      saveData(data);
+      render();
+      toast('削除しました');
+    }
+
+    function changePin() {
+      const pin = document.getElementById('new-pin').value;
+      if (!/^\d{4}$/.test(pin)) { toast('PINは4桁の数字で入力してください'); return; }
+      const data = getData();
+      data.pin   = pin;
+      saveData(data);
+      document.getElementById('new-pin').value = '';
+      toast('PINを変更しました 🔐');
+    }
+
+    // ===== モード切り替え =====
+    function handleModeToggle() {
+      isParent ? switchToChild() : openPinModal();
+    }
+
+    function switchToChild() {
+      isParent = false;
+      document.getElementById('child-view').classList.remove('hidden');
+      document.getElementById('parent-view').classList.add('hidden');
+      document.getElementById('header').classList.remove('parent-mode');
+      document.getElementById('header-title').textContent = '🌟 おてつだいアプリ';
+      document.getElementById('mode-btn').textContent     = '親モード';
+      render();
+    }
+
+    function switchToParent() {
+      isParent = true;
+      document.getElementById('child-view').classList.add('hidden');
+      document.getElementById('parent-view').classList.remove('hidden');
+      document.getElementById('header').classList.add('parent-mode');
+      document.getElementById('header-title').textContent = '⚙️ 親モード';
+      document.getElementById('mode-btn').textContent     = '子供モードへ';
+      render();
+    }
+
+    // ===== PINモーダル =====
+    function openPinModal() {
+      document.getElementById('pin-modal').classList.remove('hidden');
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-error').textContent = '';
+      setTimeout(() => document.getElementById('pin-input').focus(), 50);
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').classList.add('hidden');
+    }
+
+    function confirmPin() {
+      const input = document.getElementById('pin-input').value;
+      const data  = getData();
+      if (input === data.pin) {
+        closePinModal();
+        switchToParent();
+      } else {
+        document.getElementById('pin-error').textContent = 'PINが違います';
+        document.getElementById('pin-input').value = '';
+        document.getElementById('pin-input').focus();
+      }
+    }
+
+    document.getElementById('pin-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmPin();
+    });
+
+    // ===== ステータス表示 =====
+    function statusClass(s) {
+      return { pending:'status-pending', approved:'status-approved', rejected:'status-rejected' }[s] || '';
+    }
+
+    function statusLabel(s) {
+      return { pending:'⏳ まってね', approved:'✅ OK！', rejected:'❌ またこんど' }[s] || '';
+    }
+
+    // ===== トースト =====
+    function toast(msg) {
+      document.querySelector('.toast')?.remove();
+      const el = document.createElement('div');
+      el.className   = 'toast';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2600);
+    }
+
+    // ===== 初期化 =====
+    render();
+  </script>
+
+</body>
+</html>
